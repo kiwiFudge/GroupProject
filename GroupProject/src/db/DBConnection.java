@@ -25,6 +25,49 @@ public class DBConnection {
 	private String dbPassword = "";
 	
 	/**
+	 * public int checkCredentialsConflict( User user )
+	 * Purpose: Searches the database for an existing entry which should be unique. The method returns 0 if no match is found,
+	 * 			1 if a conflict is found for username, and 2 if a conflict is found for email
+	 * @param user
+	 * @return int
+	 */
+	public int checkCredentialsConflict( User user ) {
+		try {
+			Connection connection = DriverManager.getConnection( dbURL, dbUsername, dbPassword );
+			PreparedStatement prepStatement = connection.prepareStatement( "select * from usercredentials where username = ? or email = ?" );
+			
+			prepStatement.setString( 1, user.getUsername() );
+			prepStatement.setString( 2, user.getEmail() );
+			
+			ResultSet resultSet = prepStatement.executeQuery();
+			
+			while( resultSet.next() ) {
+				
+				if( user.getUsername().equals( resultSet.getString( "username" ) ) ) {
+					connection.close();
+					prepStatement.close();
+					
+					return 1;
+				} else if( user.getEmail().equals( resultSet.getString( "email" ) ) ) {
+					connection.close();
+					prepStatement.close();
+					
+					return 2;
+				}
+			}
+			
+			connection.close();
+			prepStatement.close();
+			
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+		}
+		
+		return 0;
+	}
+	
+	/**
 	 * public void createUser( User user )
 	 * Purpose: Connects to the database and inserts a new entry into the usercredentials table
 	 * @param user
